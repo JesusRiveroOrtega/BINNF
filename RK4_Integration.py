@@ -91,11 +91,11 @@ class IntegrationEngine:
 
 tanks_semisaturation_values = 50 * np.ones((2, 1))
 tanks_max_saturation_values = 100 * np.ones((2, 1))
-tanks_tau = 0.2 * np.ones((2, 1))
+tanks_tau = 0.02 * np.ones((2, 1))
 
 rings_semisaturation_values = 50 * np.ones((72,  1))
 rings_max_saturation_values = 100 * np.ones((72, 1))
-rings_tau = 1.5 * np.ones((72, 1))
+rings_tau = 0.15 * np.ones((72, 1))
 
 
 sm_values = np.vstack((rings_semisaturation_values, tanks_semisaturation_values))
@@ -106,7 +106,7 @@ print("Integrator Engine")
 neuron_object = Neuron(74, sm_values, mm_values, 2, tau_values) 
 
 
-integrator_object = IntegrationEngine(neuron_object, 0, 40, 0.01)
+integrator_object = IntegrationEngine(neuron_object, 0, 50, 0.01)
 integrator_object.Integrate()
 
 
@@ -135,27 +135,33 @@ neuron_object.PlotRingActivity(72, integrator_object.state_variables_record, 7, 
 neuron_object.PlotRingActivity(73, integrator_object.state_variables_record, 8, "Rotate to the Left Tank Activity", 12)  
 
 
+# r_number_input = 3
+# ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
+# plt.figure(9)
+# plt.plot(neuron_object.DecodeOrientation(integrator_object.state_variables_record, ring_indexes_input, 12))
+
+# r_number_input = 0
+# ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
+# neuron_object.plot_circles(ring_indexes_input)
+# plt.title("Targets Layer")
+
+
+# r_number_input = 1
+# ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
+# neuron_object.plot_circles(ring_indexes_input)
+# plt.title("Obstacles Layer")
+
+
+# r_number_input = 2
+# ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
+# neuron_object.plot_circles(ring_indexes_input)
+# plt.title("Setpoint Layer")
+
 r_number_input = 3
 ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-plt.figure(9)
-plt.plot(neuron_object.DecodeOrientation(integrator_object.state_variables_record, ring_indexes_input, 12))
+plt.figure()
+plt.plot(neuron_object.DecodeOrientation(integrator_object.state_variables_record, ring_indexes_input, ring_units_input))
 
-r_number_input = 0
-ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-neuron_object.plot_circles(ring_indexes_input)
-plt.title("Targets Layer")
-
-
-r_number_input = 1
-ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-neuron_object.plot_circles(ring_indexes_input)
-plt.title("Obstacles Layer")
-
-
-r_number_input = 2
-ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-neuron_object.plot_circles(ring_indexes_input)
-plt.title("Setpoint Layer")
 plt.show()
 
 

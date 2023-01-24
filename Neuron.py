@@ -20,8 +20,8 @@ class Neuron:
         self.current_firing_rate = np.zeros((n_neurons, 1))
         self.n_neurons = n_neurons
         self.current_orientation_list = []
-        self.current_orientation = 90
-        self.setpoint_orientation = 90
+        self.current_orientation = 170
+        self.setpoint_orientation = 0
         
         
     def NakaRushton(self, presynaptic_potential):
@@ -74,16 +74,19 @@ class Neuron:
         ring_units = 12
         ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
 
+        self.PreferentialOrientation(ring_indexes, self.setpoint_orientation, ring_units)
 
         # Define inputs to the layer
         # Input 1 (Target Layer)
+        '''
         r_number_input = 0
         ring_units_input = 12
         ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
         # Add first input
-        self.DirectConnection(ring_indexes, ring_indexes_input, 1.0)
+        self.DirectConnection(ring_indexes, ring_indexes_input, 1.0)'''
 
         # Input 2 (Obstacles Layer)
+        '''
         r_number_input = 1
         ring_units_input = 12
         ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
@@ -92,7 +95,7 @@ class Neuron:
         
         # Define self connection of the layer
         setpoint_pattern = -1*np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1])
-        self.RingSelfConnections(setpoint_pattern, ring_indexes)
+        self.RingSelfConnections(setpoint_pattern, ring_indexes)'''
 
         # Current Orientation Layer ---------------------------------------------------------------------------------
         # Inputs for current orientation ring
@@ -102,9 +105,9 @@ class Neuron:
 
 
         preferred_direction = np.linspace(-np.pi, np.pi, 12, endpoint = False)
-        self.PreferentialOrientation(ring_indexes, preferred_direction, self.current_orientation)        
+        self.PreferentialOrientation(ring_indexes, self.current_orientation, ring_units)        
         current_pattern = -1*np.array([1, 1, 1, 1, -0.5, -1, -0.5, 1, 1, 1, 1])
-        self.RingSelfConnections(current_pattern, ring_indexes)
+        #self.RingSelfConnections(current_pattern, ring_indexes)
         
 
         # Current minus Setpoint Layer ---------------------------------------------------------------------------------
@@ -185,8 +188,8 @@ class Neuron:
     
     def UpdateStates(self, new_states):
         self.current_firing_rate = new_states
-        #self.UpdateCurrentOrientation(0.001, 0.001)
-    
+        self.UpdateCurrentOrientation(0.0005, 0.0005)
+        
         
         
     def RingSelfConnections(self, weights, ring_index):
@@ -214,24 +217,27 @@ class Neuron:
     def TankConnections(self, weights, neuron_index, input_index):
         self.presynaptic_potential[neuron_index] = np.sum(weights * self.current_firing_rate[input_index, :])
         
-    def PreferentialOrientation(self, ring_index, preferred_direction, orientation):
+    def PreferentialOrientation(self, ring_index, orientation, n_units):
+        preferred_direction = np.linspace(-np.pi, np.pi, n_units, endpoint = False)
         projection = 100 * np.cos(preferred_direction - np.radians(orientation))
         projection = projection * (projection > 0)
         
         self.presynaptic_potential[ring_index, :] += np.expand_dims(projection, axis = 1)
         
     def UpdateCurrentOrientation(self, alpha, beta):
-        
-        self.current_orientation += (-alpha*self.current_firing_rate[48,:] + beta*self.current_firing_rate[49,:][0])
+        update_orientation = -alpha*self.current_firing_rate[72,:][0] + beta*self.current_firing_rate[73,:][0]
+        self.current_orientation += update_orientation
         if self.current_orientation < 0:
             self.current_orientation += 360
             
         if self.current_orientation > 360:
             self.current_orientation -= 360
             
-        self.current_orientation_list.append(self.current_orientation[0])
-        #print("Output sum", alpha*self.current_firing_rate[48,:] - beta*self.current_firing_rate[49,:][0])
-        print("Current Orientation", self.current_orientation)
+        self.current_orientation_list.append(self.current_orientation)
+        print("Left ", self.current_firing_rate[73,:][0])
+        print("Right ", self.current_firing_rate[72,:][0])
+        print("Output sum ", update_orientation)
+        print("Current Orientation ", self.current_orientation)
         
         
     def PlotRingActivity(self, index_ring, ring_firing_rates, fig_num, title, n_neurons_ring):
