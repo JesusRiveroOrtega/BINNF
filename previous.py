@@ -20,9 +20,8 @@ class Neuron:
         self.current_firing_rate = np.zeros((n_neurons, 1))
         self.n_neurons = n_neurons
         self.current_orientation_list = []
-        self.current_orientation = 90
+        self.current_orientation = 45
         self.setpoint_orientation = 90
-        
         
     def NakaRushton(self, presynaptic_potential):
         #print(presynaptic_potential)
@@ -43,9 +42,6 @@ class Neuron:
         self.presynaptic_potential[unit_index] += value
     
     def SetGaussianStim(self, ring_index, input_angle, area, min_value, max_value, n_units):
-        input_angle = np.deg2rad(input_angle)
-        if input_angle < -np.pi or input_angle > np.pi:
-            input_angle -= (np.sign(input_angle) * np.pi * np.ceil(np.abs(input_angle / np.pi)))
 
         angles = np.linspace(-np.pi, np.pi, n_units, endpoint=False)
         gaussian_projection = min_value + (max_value - min_value) * np.exp((-1/2) * ((angles - input_angle)**2 / (area)**2))
@@ -53,115 +49,45 @@ class Neuron:
 
     def SetConnections(self): 
         
-        # Target Layer ---------------------------------------------------------------------------------
-        ## Ring Number = 0
-        r_number = 0
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-        self.SetGaussianStim(ring_indexes, self.setpoint_orientation, 0.5, 50, 100, ring_units)
-
-        # Obstacles Layer
-        ## Ring Number = 1
-        r_number = 1
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-        self.SetGaussianStim(ring_indexes, -180, 0.5, 0, 100, ring_units)
+        #self.SetStim(0, 100)
+        #self.DirectConnection(1, 0, 1)
         
-
-        # Setpoint Layer ---------------------------------------------------------------------------------
-        # Define this ring's indexes
-        r_number = 2
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-
-
-        # Define inputs to the layer
-        # Input 1 (Target Layer)
-        r_number_input = 0
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-        # Add first input
-        self.DirectConnection(ring_indexes, ring_indexes_input, 1.0)
-
-        # Input 2 (Obstacles Layer)
-        r_number_input = 1
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-        # Add second input
-        self.DirectConnection(ring_indexes, ring_indexes_input, -2.0)
         
-        # Define self connection of the layer
-        setpoint_pattern = -1*np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1])
-        self.RingSelfConnections(setpoint_pattern, ring_indexes)
-
-        # Current Orientation Layer ---------------------------------------------------------------------------------
-        # Inputs for current orientation ring
-        r_number = 3
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-
-
+        
+        
         preferred_direction = np.linspace(-np.pi, np.pi, 12, endpoint = False)
-        self.PreferentialOrientation(ring_indexes, preferred_direction, self.current_orientation)        
-        current_pattern = -1*np.array([1, 1, 1, 1, -0.5, -1, -0.5, 1, 1, 1, 1])
-        self.RingSelfConnections(current_pattern, ring_indexes)
         
-
-        # Current minus Setpoint Layer ---------------------------------------------------------------------------------
-        r_number = 4
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-
-        # Define input from Current Orientation Layer
-        r_number_input = 3
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-
-        self.DirectConnection(ring_indexes, ring_indexes_input, np.ones((12, 1)))
-
-        # Define input from Setpoint Layer
-        r_number_input = 2
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-
+        # Inputs for current orientation ring
+        self.PreferentialOrientation(range(0, 12), preferred_direction, self.current_orientation)        
+        current_pattern = -1*np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1])
+        self.RingSelfConnections(current_pattern, range(0, 12))
+        
+        # Inputs for setpoint orientation ring   
+        #self.PreferentialOrientation(range(12, 24), preferred_direction, self.setpoint_orientation)    
+        setpoint_pattern = -1*np.array([1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1])
+        self.RingSelfConnections(setpoint_pattern, range(12, 24))
+        
+        # Current minus Setpoint Layer Connections
+        self.DirectConnection(range(24, 36), range(0, 12), np.ones((12, 1)))
         cur_set_pattern = -1*np.array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
-        self.RingOutConnections(cur_set_pattern, ring_indexes, ring_indexes_input)
-
-
-        # Setpoint minus Current Layer ---------------------------------------------------------------------------------
-        r_number = 5
-        ring_units = 12
-        ring_indexes = range(r_number * ring_units, (r_number + 1) * ring_units)
-
-        # Define input from Setpoint Layer
-        r_number_input = 2
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
+        self.RingOutConnections(cur_set_pattern, range(24, 36), range(12, 24))
         
-        self.DirectConnection(ring_indexes, ring_indexes_input, np.ones((12, 1)))
-
-        # Define input from Current Orientation Layer
-        r_number_input = 3
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-
+        # Setpoint minus Current Layer Connections
+        self.DirectConnection(range(36, 48), range(12, 24), np.ones((12, 1)))
         set_cur_pattern = -1*np.array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
-        self.RingOutConnections(set_cur_pattern, ring_indexes, ring_indexes_input)
+        self.RingOutConnections(set_cur_pattern, range(36, 48), range(0, 12))
 
-        # Tank 1 ---------------------------------------------------------------------------------
-        # Define input from Current minus Setpoint Layer
-        r_number_input = 4
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-        self.TankConnections(np.ones((12, 1)), 72, ring_indexes_input)
-
-        # Tank 2 ---------------------------------------------------------------------------------
-        # Define input from Setpoint minus Current Layer
-        r_number_input = 5
-        ring_units_input = 12
-        ring_indexes_input = range(r_number_input * ring_units_input, (r_number_input + 1) * ring_units_input)
-        self.TankConnections(np.ones((12, 1)), 73, ring_indexes_input)
-
+        #Tank 1 Connections
+        self.TankConnections(np.ones((12, 1)), 48, range(24, 36))
+        
+        #Tank 2 Connections
+        self.TankConnections(np.ones((12, 1)), 49, range(36, 48))
+        
+        #Obstacles layer
+        #self.SetGaussianStim(range(12, 24), 12, 0, 100, 3, -1)
+        
+        #Target layer
+        self.SetGaussianStim(self, ring_index, input_angle, area, min_value, max_value, n_units)
 
         
         
@@ -241,7 +167,7 @@ class Neuron:
         plt.title(title)
         plt.plot(ring_activity.squeeze())
         plt.legend(np.round(np.degrees(np.linspace(-np.pi, np.pi, n_neurons_ring, endpoint = False))))
-        
+        plt.show()
         
     def PlotNeuronsActivity(self, index_neuron, neuron_firing_rates, fig_num, title):
         neuron_activity = np.array(neuron_firing_rates)[:,index_neuron]
@@ -250,7 +176,7 @@ class Neuron:
         plt.title(title)
         plt.plot(neuron_activity.squeeze())
         
-        
+        plt.show()
         
     def DecodeOrientation(self, activity, ring_index, n_neurons_ring):
         activity = np.array(activity).squeeze()[:, ring_index]
@@ -276,11 +202,12 @@ class Neuron:
             
             circle = plt.Circle((x, y), radius=3, facecolor = (0.8, 0.2, 0.9, sat[0]), edgecolor="black")
             text = plt.text(x, y, str(int(np.rad2deg(angle))), fontsize = 7)
-            
+            print(sat[0])
             ax.add_artist(circle)
             ax.add_artist(text)
         fig.set_size_inches((8, 8))
 
+        plt.show()
         
 
         

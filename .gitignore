@@ -1,2 +1,4 @@
 IntegrationEngine.py
 RK4Test.py
+__pycache__
+gaussian_example.py
