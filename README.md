@@ -20,6 +20,8 @@ git clone https://github.com/JesusRiveroOrtega/BINNF.git
 
 Execute the example:
 ```sh
-python RK4_Integration
+python RK4_Integration.py
 ```
+
+
 
