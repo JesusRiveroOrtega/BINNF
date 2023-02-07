@@ -106,7 +106,7 @@ print("Integrator Engine")
 neuron_object = Neuron(units_per_ring * 6 + 2, sm_values, mm_values, 2, tau_values, units_per_ring) 
 
 
-integrator_object = IntegrationEngine(neuron_object, 0, 35, 0.01)
+integrator_object = IntegrationEngine(neuron_object, 0, 70, 0.01)
 integrator_object.Integrate()
 
 

@@ -70,8 +70,8 @@ class Neuron:
         r_number = 1
         
         ring_indexes = range(r_number * self.units_per_ring, (r_number + 1) * self.units_per_ring)
-        self.SetGaussianStim(ring_indexes, 0, 0.3, 0, 100, self.units_per_ring)
-        self.SetGaussianStim(ring_indexes, 180, 0.3, 0, 100, self.units_per_ring)
+        self.SetGaussianStim(ring_indexes, 75, 0.3, 0, 100, self.units_per_ring)
+        self.SetGaussianStim(ring_indexes, 135, 0.3, 0, 100, self.units_per_ring)
 
 
         # Setpoint Layer ---------------------------------------------------------------------------------
@@ -202,15 +202,13 @@ class Neuron:
         self.current_firing_rate = new_states
         self.UpdateCurrentOrientation(0.001, 0.001)
 
-        plt.clf()
+
         r_number_setpoint = 2
         ring_indexes_setpoint = range(r_number_setpoint * self.units_per_ring, (r_number_setpoint + 1) * self.units_per_ring)
 
         r_number_current = 3
         ring_indexes_current = range(r_number_current * self.units_per_ring, (r_number_current + 1) * self.units_per_ring)
 
-        self.current_setpoint_circles(ring_indexes_current, ring_indexes_setpoint)
-        plt.pause(0.05)
     
         
         
