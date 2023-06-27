@@ -35,8 +35,7 @@ class Neuron:
     def CalculatePostSynapticPotential(self, presynaptic_potential):
         return self.NakaRushton(presynaptic_potential)
     
-    def CalculateActivityUpdate(self, current_firing_rate, postsynaptic_potential):
- 
+    def CalculateActivityUpdate(self, current_firing_rate, postsynaptic_potential): 
         return (1 / self.tau) * (- current_firing_rate + postsynaptic_potential)
     
     def SetStim(self, unit_index, value):
@@ -46,18 +45,14 @@ class Neuron:
         input_angle = np.deg2rad(input_angle)
         if input_angle < -np.pi or input_angle > np.pi:
             input_angle -= (np.sign(input_angle) * np.pi * np.ceil(np.abs(input_angle / np.pi)))
-
         angles = np.linspace(-2*np.pi, 2*np.pi, 2*n_units, endpoint=False)
-        gaussian_projection_pre = min_value + (max_value - min_value) * np.exp((-1/2) * ((angles - input_angle)**2 / (area)**2))
-        
+        gaussian_projection_pre = min_value + (max_value - min_value) * np.exp((-1/2) * ((angles - input_angle)**2 / (area)**2))        
         gaussian_projection = gaussian_projection_pre[int(n_units/2) : int(n_units/2) + n_units]
         gaussian_projection[int(n_units/2) : int(n_units/2) + n_units] += gaussian_projection_pre[ : int(n_units/2)]
-        gaussian_projection[ : int(n_units/2)] += gaussian_projection_pre[int(n_units/2) + n_units : ]
-        
+        gaussian_projection[ : int(n_units/2)] += gaussian_projection_pre[int(n_units/2) + n_units : ]        
         self.presynaptic_potential[ring_index] += np.expand_dims(gaussian_projection, axis=1)
 
-    def SetConnections(self): 
-        
+    def SetConnections(self):         
         # Target Layer ---------------------------------------------------------------------------------
         ## Ring Number = 0
         r_number = 0        
@@ -236,12 +231,13 @@ class Neuron:
         product = np.squeeze(np.sum(product) / 24)
         self.presynaptic_potential[ring_index] += w * product   
     
-    def DirectConnection(self, n1, n2, w):        
+    def DirectConnection(self, target_neuron_index, source_neuron_index, source_to_target_weight):        
         '''
-            n1: Index of the receiving neuron
-            n2: Index of the sending neuron
+            target_neuron_index: Index of the receiving neuron
+            source_neuron_index: Index of the sending neuron
+            source_to_target_weight: Weight of the connection
         '''
-        self.presynaptic_potential[n1] += w * self.current_firing_rate[n2]        
+        self.presynaptic_potential[target_neuron_index] += source_to_target_weight * self.current_firing_rate[source_neuron_index]        
     
     def UpdateFunction(self, time, current_firing_rate):
         
@@ -255,16 +251,12 @@ class Neuron:
     def UpdateStates(self, new_states):
         self.current_firing_rate = new_states
         self.UpdateCurrentOrientation(0.001, 0.001)
-
-
         r_number_setpoint = 2
         ring_indexes_setpoint = range(r_number_setpoint * self.units_per_ring, (r_number_setpoint + 1) * self.units_per_ring)
-
         r_number_current = 3
         ring_indexes_current = range(r_number_current * self.units_per_ring, (r_number_current + 1) * self.units_per_ring)
         
-    def RingSelfConnections(self, weights, ring_index):
-        
+    def RingSelfConnections(self, weights, ring_index):        
         inputs = self.current_firing_rate[ring_index, :]
         inputs_stacked = np.hstack((inputs.T, inputs.T, inputs.T))        
         n = len(weights)
@@ -272,8 +264,7 @@ class Neuron:
         conv = conv[int(np.fix(n / 2) + len(inputs)): int(np.fix(n / 2) + 2 * len(inputs))]        
         self.presynaptic_potential[ring_index, :] += np.expand_dims(conv, axis=1)
         
-    def RingOutConnections(self, weights, ring_index, input_index):
-        
+    def RingOutConnections(self, weights, ring_index, input_index):        
         inputs = self.current_firing_rate[input_index, :]
         inputs_stacked = np.hstack((inputs.T, inputs.T, inputs.T))        
         n = len(weights)
@@ -289,8 +280,7 @@ class Neuron:
         projection = projection * (projection > 0)        
         self.presynaptic_potential[ring_index, :] += np.expand_dims(projection, axis = 1)
         
-    def UpdateCurrentOrientation(self, alpha, beta):
-        
+    def UpdateCurrentOrientation(self, alpha, beta):        
         r_number = 5
         tank_index_1 = (r_number + 1) * self.units_per_ring
         tank_index_2 = (r_number + 1) * self.units_per_ring + 1
@@ -325,25 +315,19 @@ class Neuron:
     def plot_circles(self, index_ring):
         # Create a figure and axes
         fig, ax = plt.subplots()
-
         # Set the axis limits to be square
         ax.set_xlim(-30, 30)
         ax.set_ylim(-30, 30)
-
         # Create an array of angles for the circles to be plotted at
         angles = np.linspace(-180, 180, len(index_ring), endpoint = False)
-
         # Plot the circles
         for angle, sat in zip(angles, (((self.current_firing_rate[index_ring]) / np.amax(self.current_firing_rate[index_ring]))).tolist()):
             x_angle_text = 26 * np.cos(np.deg2rad(angle))
             y_angle_text = 26 * np.sin(np.deg2rad(angle))
-
             x = 20 * np.cos(np.deg2rad(angle))
-            y = 20 * np.sin(np.deg2rad(angle))
-            
+            y = 20 * np.sin(np.deg2rad(angle))            
             circle = plt.Circle((x, y), radius=2.5, facecolor = (0.3, 0.4, 0.6, sat[0]), edgecolor="white", linewidth = 2)
-            text = plt.text(x_angle_text - 1, y_angle_text - 1, str(int(angle)), fontsize = 9, color = (1, 1, 1))
-            
+            text = plt.text(x_angle_text - 1, y_angle_text - 1, str(int(angle)), fontsize = 9, color = (1, 1, 1))            
             ax.add_artist(circle)
             ax.add_artist(text)
         fig.set_size_inches((8, 8))
@@ -352,28 +336,21 @@ class Neuron:
     def current_setpoint_circles(self, current_orientation_index_ring, setpoint_orientation_index_ring):
         # Create a figure and axes
         fig, ax = plt.subplots()
-
         # Set the axis limits to be square
         ax.set_xlim(-30, 30)
         ax.set_ylim(-30, 30)
-
         # Create an array of angles for the circles to be plotted at
         angles = np.linspace(-180, 180, len(current_orientation_index_ring), endpoint = False)
-
         # Plot the circles
         for angle, sat in zip(angles, (((self.current_firing_rate[setpoint_orientation_index_ring]) / np.amax(self.current_firing_rate[setpoint_orientation_index_ring]))).tolist()):
             x_angle_text = 26 * np.cos(np.deg2rad(angle))
             y_angle_text = 26 * np.sin(np.deg2rad(angle))
-
             x = 20 * np.cos(np.deg2rad(angle))
-            y = 20 * np.sin(np.deg2rad(angle))
-            
+            y = 20 * np.sin(np.deg2rad(angle))            
             circle = plt.Circle((x, y), radius=1.6, facecolor = (0.3, 0.4, 0.6, sat[0]), edgecolor="white", linewidth = 2)
-            text = plt.text(x_angle_text - 1, y_angle_text - 1, str(int(angle)), fontsize = 9, color = (1, 1, 1))
-            
+            text = plt.text(x_angle_text - 1, y_angle_text - 1, str(int(angle)), fontsize = 9, color = (1, 1, 1))            
             ax.add_artist(circle)
             ax.add_artist(text)
-
         # Plot the circles
         for angle, sat in zip(angles, (((self.current_firing_rate[current_orientation_index_ring]) / np.amax(self.current_firing_rate[current_orientation_index_ring]))).tolist()):
             x = 14 * np.cos(np.deg2rad(angle))
