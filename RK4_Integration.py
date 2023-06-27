@@ -4,86 +4,48 @@ Created on Wed Nov 30 10:23:41 2022
 
 @author: jrive
 """
-
 import numpy as np
 from Neuron import Neuron
 from matplotlib import pyplot as plt
 
 class IntegrationEngine:
     def __init__(self, system_object, initial_time, final_time, step_size):
-        '''
-        
-
-        Parameters
-        ----------
-        system_object : Integrand object
-            Object created with the class that represents the system to be integrated.
-        initial_time : float
-            Starting time point.
-        final_time : float
-            Final time point.
-        step_size : float
-            Change of time in each update step.
-
-        Returns
-        -------
-        None.
-
-        '''
         self.update_function = system_object.UpdateFunction
-        self.initial_time = initial_time
-        self.final_time = final_time
-        self.step_size = step_size
-        self.time = 0
         self.state_variables = system_object.current_firing_rate
         self.UpdateStates = system_object.UpdateStates
+        self.initial_time = initial_time
+        self.final_time = final_time
+        self.step_size = step_size        
+        self.time_values = []
+        self.stim_record = []
         self.state_variables_record = []
         
-        
-    def CalculateK(self, k_step, coefficient_value):
-        '''
-        
-
-        Parameters
-        ----------
-        k_step : float
-            DESCRIPTION.
-        coefficient_value : TYPE
-            DESCRIPTION.
-
-        Returns
-        -------
-        Kval : TYPE
-            DESCRIPTION.
-
-        '''
-        
-        Kval = self.update_function(self.time + k_step, self.state_variables + coefficient_value)
-        
+    def CalculateK(self, coefficient_value):
+        Kval = self.step_size * self.update_function(self.current_firing_rate + coefficient_value)        
         return Kval
         
-    def CalculateStep(self):   
+    def CalculateStep(self, time):
+        K1 = self.CalculateK(0)
+        K2 = self.CalculateK(self.step_size * K1/2)
+        K3 = self.CalculateK(self.step_size * K2/2)
+        K4 = self.CalculateK(self.step_size * K3)        
+        K = (K1 + 2 * K2 + 2 * K3 + K4) / 6               
+        self.state_variables = self.state_variables + K
+        self.UpdateStates(self.state_variables)
         
+        return time + self.step_size
         
-        K1 = self.CalculateK(0, 0)
-        K2 = self.CalculateK(self.step_size / 2, self.step_size * K1/2)
-        K3 = self.CalculateK(self.step_size / 2, self.step_size * K2/2)
-        K4 = self.CalculateK(self.step_size, self.step_size * K3)
+    def Integrate(self):        
+        t = 0
+        neuron_object.SetCurrentOrientation(90)
         
-        K = self.step_size * (K1 + 2 * K2 + 2 * K3 + K4) / 6        
-        
-        self.state_variables = self.state_variables + K        
-        self.UpdateStates(self.state_variables)      
-        
-        self.time += self.step_size
-        
-        
-    def Integrate(self):
-        
-        
-        while self.time < self.final_time:
-            self.state_variables_record.append(self.state_variables)            
-            self.CalculateStep()
+        while t < self.final_time:
+            neuron_object.SetDistance_to_Target(100)
+            neuron_object.SetTargetOrientation(0)
+            self.firing_rate_values.append(self.current_firing_rate)            
+            t = self.CalculateStep(t)                        
+            self.time_values.append(t)            
+            self.stim_record.append(self.stim)   
             
     
             
